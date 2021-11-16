@@ -3,7 +3,7 @@
 
 public class Solution : ISolution
 {
-    public Solution()
+    Solution()
     {
         // You can initiate and calculate things here
     }
@@ -13,40 +13,43 @@ public class Solution : ISolution
      * running and consumes 1 fuel. This function will be called repeatedly until there
      * are no more targets left on the grid, or the tank runs out of fuel.
      */
-    public EnemyScanner enemyScanner = new EnemyScanner();
-    public VehicleMotionHandler driver = new VehicleMotionHandler();
-    public Navigator navigator = new Navigator();
+    EnemyScanner enemyScanner = new EnemyScanner();
+    VehicleMotionHandler driver = new VehicleMotionHandler();
 
-    void FindAndDestroy()
+    bool FindAndDestroy()
     {
+        bool actionTaken = false;
+
         if (API.IdentifyTarget()) // If enemy within range, shoot
         {
             API.FireCannon();
+            actionTaken = true;
         }
         if (enemyScanner.isEnemyApproaching()) // Find approaching enemy and face it
         {
             CardinalDirection enemyDirection = enemyScanner.GetDirectionNearestEnemy();
             driver.TurnTo(enemyDirection);
+            actionTaken = true;
         }
+        return actionTaken;
     }
 
     internal void Explore()
     {
-        /**
-         * 
-         * 
-         */
+        driver.AutoMoveCW();
     }
 
     public void Update()
     {
         //We are standing at some pos, need to check if monster is approaching us, in that case we need to face it and kill it.
-        FindAndDestroy();
+        if (!FindAndDestroy())
+        {
+            Explore();
+        }
         //Find our way around the map.
-        Explore();
     }
 
-    internal class Navigator
+    public class Navigator
     {
         public CardinalDirection currentHeading;
 
@@ -65,16 +68,32 @@ public class Solution : ISolution
             private set { }
         }
 
+        //internal void 
 
+        internal void TurnRight()
+        {
+            //throw new NotImplementedException();
+        }
+
+        internal void TurnLeft()
+        {
+            //throw new NotImplementedException();
+        }
+
+        internal void MoveForward()
+        {
+            //throw new NotImplementedException();
+        }
     }
 
     internal class VehicleMotionHandler
     {
         public int LidarFrontTemp;
 
-        void AutoMoveCW()
+        internal void AutoMoveCW()
         {
             int LidarFrontTemp = API.LidarFront();
+            int LidarLeftTemp = API.LidarLeft();
             if (LidarFrontTemp == 1)
             {
                 if (!API.IdentifyTarget())
@@ -82,27 +101,31 @@ public class Solution : ISolution
                     TurnRight();
                 }
             }
+            else if (LidarLeftTemp > 1)
+                {
+                    TurnLeft();
+                }
             else
             {
                 MoveForward();
             }
         }
 
-        public void MoveForward()
+        void MoveForward()
         {
-            navigator.MoveForward();
+            Navigator.Instance.MoveForward();
             API.MoveForward();
         }
 
-        public void TurnRight()
+        void TurnRight()
         {
-            navigator.TurnRight();
+            Navigator.Instance.TurnRight();
             API.TurnRight();
         }
 
-        public void TurnLeft()
+        internal void TurnLeft()
         {
-            navigator.TurnLeft();
+            Navigator.Instance.TurnLeft();
             API.TurnLeft();
         }
 
@@ -122,7 +145,7 @@ public class Solution : ISolution
         }
     }
 
-    enum CardinalDirection
+    public enum CardinalDirection
     {
         North,
         East,
