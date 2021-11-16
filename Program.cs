@@ -13,11 +13,11 @@ public class Solution : ISolution
      * running and consumes 1 fuel. This function will be called repeatedly until there
      * are no more targets left on the grid, or the tank runs out of fuel.
      */
-    EnemyScanner enemyScanner = new EnemyScanner();
-    VehicleMotionHandler driver = new VehicleMotionHandler();
-    Navigator navigator = new Navigator();
+    public EnemyScanner enemyScanner = new EnemyScanner();
+    public VehicleMotionHandler driver = new VehicleMotionHandler();
+    public Navigator navigator = new Navigator();
 
-     void FindAndDestroy()
+    void FindAndDestroy()
     {
         if (API.IdentifyTarget()) // If enemy within range, shoot
         {
@@ -45,72 +45,118 @@ public class Solution : ISolution
         //Find our way around the map.
         Explore();
     }
-}
 
-internal class Navigator
-{
-    public currentHeading;
-
-    public Navigator()
+    internal class Navigator
     {
-        currentHeading = CardinalDirection.North; //
-    }
-    
-    public currentHeading = CardinalDirection.North;
-}
+        public CardinalDirection currentHeading;
 
-internal class VehicleMotionHandler
-{
-    public void TurnTo(CardinalDirection cardinalDirection) { }
-}
+        public Navigator()
+        {
+            currentHeading = CardinalDirection.North; // Initial direction always north.
+        }
 
-public class EnemyScanner
-{
-    internal CardinalDirection GetDirectionNearestEnemy()
-    {
-        throw new NotImplementedException();
+        public static Navigator Instance
+        {
+            get
+            {
+                if (Instance == null) { Instance = new Navigator(); }
+                return Instance;
+            }
+            private set { }
+        }
+
+
     }
 
-    internal bool isEnemyApproaching()
+    internal class VehicleMotionHandler
     {
-        throw new NotImplementedException();
+        public int LidarFrontTemp;
+
+        void AutoMoveCW()
+        {
+            int LidarFrontTemp = API.LidarFront();
+            if (LidarFrontTemp == 1)
+            {
+                if (!API.IdentifyTarget())
+                {
+                    TurnRight();
+                }
+            }
+            else
+            {
+                MoveForward();
+            }
+        }
+
+        public void MoveForward()
+        {
+            navigator.MoveForward();
+            API.MoveForward();
+        }
+
+        public void TurnRight()
+        {
+            navigator.TurnRight();
+            API.TurnRight();
+        }
+
+        public void TurnLeft()
+        {
+            navigator.TurnLeft();
+            API.TurnLeft();
+        }
+
+        public void TurnTo(CardinalDirection cardinalDirection) { }
     }
-}
 
-enum CardinalDirection
-{
-    North,
-    East,
-    South,
-    West
-}
-
-public class MapMaker
-{
-    enum blockTypes
+    internal class EnemyScanner
     {
-        Floor,
-        Unidentified,
-        Wall,
-        Target
+        internal CardinalDirection GetDirectionNearestEnemy()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool isEnemyApproaching()
+        {
+            throw new NotImplementedException();
+        }
     }
 
-    int[,] map = new int[1, 1]; //[1] upp/ner [2] vänster/höger
-    int[] myPos = {0,0};
-
-    void ResizeMap()
+    enum CardinalDirection
     {
+        North,
+        East,
+        South,
+        West
     }
-    //API from High-level code
-    void UpdateMap(int dst_North, int dst_South, int dst_East, int dst_West)
+
+    internal class MapMaker
     {
+        enum blockTypes
+        {
+            Floor,
+            Unidentified,
+            Wall,
+            Target
+        }
+
+        int[,] map = new int[1, 1]; //[1] upp/ner [2] vänster/höger
+        int[] myPos = { 0, 0 };
+
+        void ResizeMap()
+        {
+        }
+        //API from High-level code
+        void UpdateMap(int dst_North, int dst_South, int dst_East, int dst_West)
+        {
+        }
+
+        void PrintMap()
+        {
+        }
+
+
+
+
     }
-
-    void PrintMap()
-    {
-    }
-
-
-
-
 }
