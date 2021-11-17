@@ -34,6 +34,15 @@ public class Solution : ISolution
         return actionTaken;
     }
 
+    enum EndingAction
+    {
+        FireCanon,
+        MoveForward,
+        MoveBackward,
+        TurnRight,
+        TurnLeft
+    }
+
     internal void Explore()
     {
         driver.AutoMoveCW();
