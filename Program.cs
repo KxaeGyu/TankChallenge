@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Linq;
 
 public class Solution : ISolution
 {
@@ -68,7 +68,24 @@ public class Solution : ISolution
             private set { }
         }
 
-        //internal void 
+        internal CardinalDirection CardinalDirectionRight()
+        {
+            var Arr = (CardinalDirection[])Enum.GetValues(typeof(CardinalDirection));
+            int currentIndex = Arr.Where(d => d == currentHeading).;
+            // use currentHeading and move +1 in array
+            // if at last index, return first
+            return Arr[currentIndex];
+        }
+
+        internal CardinalDirection CardinalDirectionLeft()
+        {
+            var Arr = (CardinalDirection[])Enum.GetValues(typeof(CardinalDirection));
+            int currentIndex = Arr.Select((d, i) => (d, i)).First(d == currentHeading).index;
+            // use currentHeading and move -1 in array.
+            // if at first index, return last
+
+            return Arr[i];
+        }
 
         internal void TurnRight()
         {
