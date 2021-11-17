@@ -48,8 +48,10 @@ public class Solution : ISolution
         driver.AutoMoveCW();
     }
 
+    EndingAction pendingAction;
     public void Update()
     {
+
         //We are standing at some pos, need to check if monster is approaching us, in that case we need to face it and kill it.
         if (!FindAndDestroy())
         {
