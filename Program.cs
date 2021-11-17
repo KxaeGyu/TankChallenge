@@ -1,11 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 public class Solution : ISolution
 {
+    List<EndingAction> actionList;
     Solution()
     {
         // You can initiate and calculate things here
+        actionList = new List<EndingAction>
+        {
+            EndingAction.TurnLeft,
+            EndingAction.TurnRight,
+            EndingAction.MoveForward
+        };
     }
     /**
      * Executes a single step of the tank's programming. The tank can only move, turn,
@@ -51,7 +59,6 @@ public class Solution : ISolution
     EndingAction pendingAction;
     public void Update()
     {
-
         //We are standing at some pos, need to check if monster is approaching us, in that case we need to face it and kill it.
         if (!FindAndDestroy())
         {
