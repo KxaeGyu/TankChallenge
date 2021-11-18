@@ -98,11 +98,56 @@ public static class Tank
 public static class Map
 {
     public static BlockType[,] map = new BlockType[1, 1];
+    public static Dictionary<(int x, int y), Tile> map2 = new Dictionary<(int x, int y), Tile>();
 
     static Vector2 originOffset = new Vector2();
 
     public static void UpdateMap()
     {
+    }
+    public static void UpdateMap2()
+    {
+
+        if (map2.ContainsKey((Tank.myPos.x, LidarSamples.north))) 
+        {
+            for (int y = Tank.myPos.y; y < (Tank.myPos.y + LidarSamples.north); y++) // Tiles between Tank and North Target
+            {
+                if (!map2.ContainsKey((Tank.myPos.x, y))) // Set non-existing Tiles to Ground
+                {
+                    map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
+                }
+            }
+
+            for (int y = (Tank.myPos.y - LidarSamples.south); y < Tank.myPos.y; y++) // Tiles between Tank and South Target
+            {
+                if (!map2.ContainsKey(((Tank.myPos.x, y)))) // Set non-existing Tiles to Ground
+                {
+                    map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
+                }
+            }
+
+            for (int x = Tank.myPos.x; x < (Tank.myPos.x + LidarSamples.east); x++) // Tiles between Tank and East Target
+            {
+                if (!map2.ContainsKey((x, Tank.myPos.y))) // Set non-existing Tiles to Ground
+                {
+                    map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
+                }
+            }
+
+            for (int x = (Tank.myPos.x - LidarSamples.west); x < Tank.myPos.x; x++)
+            {
+                if (!map2.ContainsKey((x, Tank.myPos.y)))
+                {
+                    map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground);
+                }
+            }
+        }
+        
+        
+        var a = Tank.myPos;
+
+        LidarSamples.north
+        
     }
 
 
@@ -118,4 +163,18 @@ public class Vector2
 {
     public int x = 0;
     public int y = 0;
+}
+public class Tile
+{
+    public Vector2 Position { get; set; }
+    public BlockType BlockType { get; set; }
+    public Tile(int x, int y, BlockType blockType = BlockType.Unidentified)
+    {
+        Position = new Vector2();
+        Position.x = x;
+        Position.y = y;
+
+        BlockType = blockType;
+    }
+
 }
