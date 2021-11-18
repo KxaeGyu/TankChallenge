@@ -2,7 +2,7 @@
 {
     public static int CurrentFuel() { return 0; }
     public static void MoveForward() { }
-    public static void MoveBackwards() { }
+    public static void MoveBackward() { }
     public static void TurnLeft() { }
     public static void TurnRight() { }
     public static bool IdentifyTarget() { return false; }
