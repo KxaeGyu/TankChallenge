@@ -109,34 +109,32 @@ public static class Map
     {
         globalPos.x = (originOffset.x + Tank.myPos.x);
         globalPos.y = (originOffset.y + Tank.myPos.y);
-        int currentDstNorth = LidarSamples.north - globalPos.y;
-        int currentDstEast  = LidarSamples.east  - globalPos.x;
+        int currentDstNorth = globalPos.y + LidarSamples.north + 1 - map.GetLength(1);
+        int currentDstEast = globalPos.x + LidarSamples.east + 1 - map.GetLength(0);
         int currentDstSouth = LidarSamples.south - globalPos.y;
-        int currentDstWest  = LidarSamples.west  - globalPos.x;
+        int currentDstWest = LidarSamples.west - globalPos.x;
 
-        int deltaYn = currentDstNorth - (map.GetLength(1) - globalPos.y);
-        int deltaYs = currentDstSouth - globalPos.y;
-        int deltaXe = currentDstEast - (map.GetLength(0) - globalPos.x);
-        int deltaXw = currentDstWest - globalPos.x;
+        int deltaYn = (currentDstNorth > 0) ? currentDstNorth : 0;
+        int deltaYs = (currentDstSouth - globalPos.y) > 0 ? (currentDstSouth - globalPos.y) : 0;
+        int deltaXe = (currentDstEast > 0) ? currentDstEast : 0;
+        int deltaXw = (currentDstWest - globalPos.x) > 0 ? (currentDstWest - globalPos.x) : 0;
 
-
-        if (deltaYn+ deltaYs+ deltaXe+ deltaXw > 0)
+        if (deltaYn > 0 || deltaYs > 0 || deltaXe > 0 || deltaXw > 0)
         {
-            BlockType[,] newMap = new BlockType[deltaXe+deltaXw+map.GetLength(0), deltaYn + deltaYs + map.GetLength(1)];
-
+            BlockType[,] newMap = new BlockType[deltaXe + deltaXw + map.GetLength(0), deltaYn + deltaYs + map.GetLength(1)];
             for (int i = 0; i < map.GetLength(0); i++)
             {
                 for (int j = 0; j < map.GetLength(1); j++)
                 {
-                    newMap[deltaXe + i, deltaYs + j] = map[i, j];
+                    newMap[deltaXw + i, deltaYs + j] = map[i, j];
                 }
             }
-
-            originOffset.x += deltaXe;
+            map = newMap;
+            originOffset.x += deltaXw;
             originOffset.y += deltaYs;
+            globalPos.x = (originOffset.x + Tank.myPos.x);
+            globalPos.y = (originOffset.y + Tank.myPos.y);
         }
-
-
     }
 
     public static void UpdateMap2()
@@ -179,13 +177,44 @@ public static class Map
     }
     public static void PrintMap()
     {
-        /*
-        [ ][ ][ ][ ][W]
-                 [ ][?]
-        */
-    }
+        for (int j = map.GetLength(1) - 1; j >= 0; j--)
+        {
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                if (i == globalPos.x && j == globalPos.y)
+                {
+                    Console.Write("[X]");
+                }
+                else if (i == originOffset.x && j == originOffset.y)
+                {
+                    Console.Write("[O]");
+                }
+                else
+                {
+                    switch (map[i, j])
+                    {
+                        case BlockType.Ground:
+                            Console.Write("[ ]");
+                            break;
+                        case BlockType.Unidentified:
+                            Console.Write("[?]");
+                            break;
+                        case BlockType.Wall:
+                            Console.Write("[W]");
+                            break;
+                        case BlockType.Hostile:
+                            Console.Write("[H]");
+                            break;
+                    }
+                }
 
-    public static void PrintMap2()
+            }
+            Console.WriteLine();
+        }
+    }
+}
+
+public static void PrintMap2()
     {
         
     }
