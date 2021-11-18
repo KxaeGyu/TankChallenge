@@ -134,19 +134,18 @@ public static class Map
                 }
             }
 
-            for (int x = (Tank.myPos.x - LidarSamples.west); x < Tank.myPos.x; x++)
+            for (int x = (Tank.myPos.x - LidarSamples.west); x < Tank.myPos.x; x++) // Tiles between Tank and West Target
             {
-                if (!map2.ContainsKey((x, Tank.myPos.y)))
+                if (!map2.ContainsKey((x, Tank.myPos.y))) // Set non-existing Tiles to Ground
                 {
-                    map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground);
+                    map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
                 }
             }
         }
-        
-        
-        var a = Tank.myPos;
+    }
 
-        LidarSamples.north
+    public static void PrintMap2()
+    {
         
     }
 
