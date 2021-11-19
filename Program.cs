@@ -138,99 +138,224 @@ public static class Map
         }
     }
 
+    public static Vector2 UpdateMapDirection(CardinalDirection lidarDirection)
+    {
+        Vector2 target = new Vector2()
+        { 
+            x = lidarDirection == CardinalDirection.North || lidarDirection == CardinalDirection.South ? 
+                Tank.myPos.x : 
+                lidarDirection == CardinalDirection.East ? Tank.myPos.x + LidarSamples.east : Tank.myPos.x - LidarSamples.west, 
+            y = lidarDirection == CardinalDirection.East || lidarDirection == CardinalDirection.West ? 
+                Tank.myPos.y : 
+                lidarDirection == CardinalDirection.North ? Tank.myPos.y + LidarSamples.north : Tank.myPos.y - LidarSamples.south
+        };
+
+        // Add or Update Target Tile
+        if (!map2.ContainsKey((target.x, target.y))) // new Tile discovered
+        {
+            map2.Add((target.x, target.y),
+                new Tile(target.x, target.y, (Tank.myDir == lidarDirection) ?
+                    (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall) // Facing target. API.IdentifyTarget available
+                    :
+                    BlockType.Unidentified                                      // Not facing target. Only Lidar available
+                ));
+        }
+        else // Update Tile BlockType
+        {
+            if (Tank.myDir == lidarDirection) // Scan Target
+            {
+                map2[(target.x, target.y)].BlockType = API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall;
+            }
+            else if (map2[(target.x, target.y)].BlockType == BlockType.Ground) // Target scanned on Ground => Hostile
+            {
+                map2[(target.x, target.y)].BlockType = BlockType.Hostile;
+            }
+            else // Target found Left, Right or Behind Tank => can not identify => Unidentified
+            {
+                map2[(target.x, target.y)].BlockType = BlockType.Unidentified;
+            }
+            //map2[(targetNorth.x, targetNorth.y)].BlockType = (Tank.myDir == CardinalDirection.North) ? 
+            //    (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall) :
+            //    BlockType.Unidentified
+            //    ;
+        }
+
+        // Set Tiles between Tank & Target to ground
+        //int dxy = lidarDirection == CardinalDirection.North || lidarDirection == CardinalDirection.South ? Math.Min(Tank.myPos.y, target.y ) : Math.Min(Tank.myPos.x, target.x); // adjust to not cover target tile
+        //int end = lidarDirection == CardinalDirection.North || lidarDirection == CardinalDirection.South ? Math.Max(Tank.myPos.y, target.y) : Math.Max(Tank.myPos.x, target.x);
+        int xyStart = 0;
+        int xyEnd = 0;
+        if (lidarDirection == CardinalDirection.North)
+        {
+            xyStart = Tank.myPos.y + 1;
+            xyEnd = target.y - 1;
+        }
+        else if (lidarDirection == CardinalDirection.South)
+        {
+            xyStart = target.y + 1;
+            xyEnd = Tank.myPos.y - 1;
+        }
+        else if (lidarDirection == CardinalDirection.East)
+        {
+            xyStart = Tank.myPos.x + 1;
+            xyEnd = target.x - 1;
+        }
+        else if(lidarDirection == CardinalDirection.West)
+        {
+            xyStart = target.x + 1;
+            xyEnd = Tank.myPos.x - 1;
+        }
+
+        if (lidarDirection == CardinalDirection.North || lidarDirection == CardinalDirection.South) // iterate on y-axis
+        {
+            for (int y = xyStart; y <= xyEnd; y++)
+            {
+                if (!map2.ContainsKey((Tank.myPos.x, y))) // Set non-existing Tiles to Ground
+                {
+                    map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
+                }
+                else // override to ground
+                {
+                    map2[(Tank.myPos.x, y)].BlockType = BlockType.Ground;
+                }
+            }
+        }
+        else // iterate on x-axis
+        {
+            for (int x = xyStart; x <= xyEnd; x++)
+            {
+                if (!map2.ContainsKey((x, Tank.myPos.y))) // Set non-existing Tiles to Ground
+                {
+                    map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
+                }
+                else // override to ground
+                {
+                    map2[(x, Tank.myPos.y)].BlockType = BlockType.Ground;
+                }
+            }
+
+        }
+
+
+        return target;
+    }
     public static void UpdateMap2()
     {
-        // North lidar
-        Vector2 targetNorth = new Vector2() { x = Tank.myPos.x, y = (Tank.myPos.y + LidarSamples.north)};
-        // --Target Tile / identify if facing north
-        if (Tank.myDir == CardinalDirection.North)
+        // Note: each Tank to Target loop currently includes the Tank Tile. This Tile can be excluded since we will always move the Tank to a known Tile.
+        foreach (var lidar in Enum.GetValues(typeof(CardinalDirection)).Cast<CardinalDirection>().ToList())
         {
-            if (!map2.ContainsKey((targetNorth.x, targetNorth.y))) // new Tile discovered
-            {
-                map2.Add((targetNorth.x, targetNorth.y),
-                    new Tile(targetNorth.x, targetNorth.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
-            }
-            else // override current BlockType with Wall.
-            {
-                map2[(targetNorth.x, targetNorth.y)].BlockType = (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall);
-            }
-        }
-        // --Tiles between Tank & Target
-        for (int y = Tank.myPos.y; y < targetNorth.y; y++) // Tiles between Tank and North Target
-        {
-            if (!map2.ContainsKey((Tank.myPos.x, y))) // Set non-existing Tiles to Ground
-            {
-                map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
-            }
-            //else if (map2[(Tank.myPos.x, y)].BlockType == BlockType.Ground) // Object detected at Ground Tile ???
-            //{
-            //    map2[(Tank.myPos.x, y)].BlockType = BlockType.Hostile;
-            //}
+            UpdateMapDirection(lidar);
         }
 
-        // South Lidar
-        Vector2 targetSouth = new Vector2() { x = Tank.myPos.x, y = Tank.myPos.y - LidarSamples.south};
-        // --Target Tile / identify if facing south
-        if (Tank.myDir == CardinalDirection.South)
-        {
-            if (!map2.ContainsKey((targetSouth.x, targetSouth.y)))
-            {
-                map2.Add((targetSouth.x, targetSouth.y),
-                    new Tile(targetSouth.x, targetSouth.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
-            }
-            //add
-        }
-        // --Tiles between Tank & Target
-        for (int y = targetSouth.y; y < Tank.myPos.y; y++) // Tiles between Tank and South Target
-        {
-            if (!map2.ContainsKey(((Tank.myPos.x, y)))) // Set non-existing Tiles to Ground
-            {
-                map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
-            }
-        }
+        //// North lidar
+        //Vector2 targetNorth = new Vector2() { x = Tank.myPos.x, y = (Tank.myPos.y + LidarSamples.north)};
+        //// --Target Tile / identify if facing north
+        //if (!map2.ContainsKey((targetNorth.x, targetNorth.y))) // new Tile discovered
+        //{
+        //    map2.Add((targetNorth.x, targetNorth.y),
+        //        new Tile(targetNorth.x, targetNorth.y, (Tank.myDir == CardinalDirection.North) ?
+        //            (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall) // Facing target. API.IdentifyTarget available
+        //            :
+        //            BlockType.Unidentified                                      // Not facing target. Only Lidar available
+        //        ));
+        //}
+        //else // Update Tile BlockType
+        //{
+        //    if (Tank.myDir == CardinalDirection.North) // Scan Target
+        //    {
+        //        map2[(targetNorth.x, targetNorth.y)].BlockType = API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall;
+        //    }
+        //    else if (map2[(targetNorth.x, targetNorth.y)].BlockType == BlockType.Ground) // Target scanned on Ground => Hostile
+        //    {
+        //        map2[(targetNorth.x, targetNorth.y)].BlockType = BlockType.Hostile;
+        //    }
+        //    else // Target found Left, Right or Behind Tank => can not identify => Unidentified
+        //    {
+        //        map2[(targetNorth.x, targetNorth.y)].BlockType = BlockType.Unidentified;
+        //    }
+        //    //map2[(targetNorth.x, targetNorth.y)].BlockType = (Tank.myDir == CardinalDirection.North) ? 
+        //    //    (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall) :
+        //    //    BlockType.Unidentified
+        //    //    ;
+        //}
 
-        //East Lidar
-        Vector2 targetEast = new Vector2() { x = Tank.myPos.x + LidarSamples.east, y = Tank.myPos.y };
-        // --Target Tile / identify if facing East
-        if (Tank.myDir == CardinalDirection.East)
-        {
-            if (!map2.ContainsKey((targetEast.x, targetEast.y)))
-            {
-                map2.Add((targetEast.x, targetEast.y),
-                    new Tile(targetEast.x, targetEast.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
-            }
-            //add
-        }
-        // --Tiles between Tank & Target
-        for (int x = Tank.myPos.x; x < targetEast.x; x++) // Tiles between Tank and East Target
-        {
-            if (!map2.ContainsKey((x, Tank.myPos.y))) // Set non-existing Tiles to Ground
-            {
-                map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
-            }
-        }
+        //// --Tiles between Tank & Target
+        //for (int y = Tank.myPos.y; y < targetNorth.y; y++) // Tiles between Tank and North Target
+        //{
+        //    if (!map2.ContainsKey((Tank.myPos.x, y))) // Set non-existing Tiles to Ground
+        //    {
+        //        map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
+        //    }
+        //    //else if (map2[(Tank.myPos.x, y)].BlockType == BlockType.Ground) // Object detected at Ground Tile ???
+        //    //{
+        //    //    map2[(Tank.myPos.x, y)].BlockType = BlockType.Hostile;
+        //    //}
+        //}
 
-        //West Lidar
-        Vector2 targetWest = new Vector2() { x = Tank.myPos.x - LidarSamples.east};
-        // --Target Tile / identify if facing West
-        if (Tank.myDir == CardinalDirection.West)
-        {
-            if (!map2.ContainsKey((targetWest.x, targetWest.y)))
-            {
-                map2.Add((targetWest.x, targetWest.y),
-                    new Tile(targetWest.x, targetWest.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
-            }
-            //add
-        }
-        // --Tiles between Tank & Target
-        for (int x = targetWest.x; x < Tank.myPos.x; x++)
-        {
-            if (!map2.ContainsKey((x, Tank.myPos.y)))
-            {
-                map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
-            }
-        }
-        
+        //// South Lidar
+        //Vector2 targetSouth = new Vector2() { x = Tank.myPos.x, y = Tank.myPos.y - LidarSamples.south};
+        //// --Target Tile / identify if facing south
+        //if (!map2.ContainsKey((targetSouth.x, targetSouth.y)))
+        //{
+        //    map2.Add((targetSouth.x, targetSouth.y),
+        //        new Tile(targetSouth.x, targetSouth.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
+        //}
+        //else // Update Tile BlockType
+        //{
+
+        //}
+
+        //// --Tiles between Tank & Target
+        //for (int y = Tank.myPos.y; y > targetSouth.y; y--) // Tiles between Tank and South Target
+        //{
+        //    if (!map2.ContainsKey(((Tank.myPos.x, y)))) // Set non-existing Tiles to Ground
+        //    {
+        //        map2.Add((Tank.myPos.x, y), new Tile(Tank.myPos.x, y, BlockType.Ground));
+        //    }
+        //}
+
+        ////East Lidar
+        //Vector2 targetEast = new Vector2() { x = Tank.myPos.x + LidarSamples.east, y = Tank.myPos.y };
+        //// --Target Tile / identify if facing East
+        //if (Tank.myDir == CardinalDirection.East)
+        //{
+        //    if (!map2.ContainsKey((targetEast.x, targetEast.y)))
+        //    {
+        //        map2.Add((targetEast.x, targetEast.y),
+        //            new Tile(targetEast.x, targetEast.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
+        //    }
+        //    //add
+        //}
+        //// --Tiles between Tank & Target
+        //for (int x = Tank.myPos.x; x < targetEast.x; x++) // Tiles between Tank and East Target
+        //{
+        //    if (!map2.ContainsKey((x, Tank.myPos.y))) // Set non-existing Tiles to Ground
+        //    {
+        //        map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
+        //    }
+        //}
+
+        ////West Lidar
+        //Vector2 targetWest = new Vector2() { x = Tank.myPos.x - LidarSamples.west, y = Tank.myPos.y};
+        //// --Target Tile / identify if facing West
+        //if (Tank.myDir == CardinalDirection.West)
+        //{
+        //    if (!map2.ContainsKey((targetWest.x, targetWest.y)))
+        //    {
+        //        map2.Add((targetWest.x, targetWest.y),
+        //            new Tile(targetWest.x, targetWest.y, (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall)));
+        //    }
+        //    //add
+        //}
+        //// --Tiles between Tank & Target
+        //for (int x = Tank.myPos.x; x > targetWest.x; x--)
+        //{
+        //    if (!map2.ContainsKey((x, Tank.myPos.y)))
+        //    {
+        //        map2.Add((x, Tank.myPos.y), new Tile(x, Tank.myPos.y, BlockType.Ground));
+        //    }
+        //}
+
     }
     public static void PrintMap()
     {
