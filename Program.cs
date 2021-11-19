@@ -172,7 +172,7 @@ public static class Map
             }
             else // Target found Left, Right or Behind Tank => can not identify => Unidentified
             {
-                map2[(target.x, target.y)].BlockType = BlockType.Unidentified;
+                //map2[(target.x, target.y)].BlockType = BlockType.Unidentified;
             }
             //map2[(targetNorth.x, targetNorth.y)].BlockType = (Tank.myDir == CardinalDirection.North) ? 
             //    (API.IdentifyTarget() ? BlockType.Hostile : BlockType.Wall) :
@@ -241,7 +241,7 @@ public static class Map
     }
     public static void UpdateMap2()
     {
-        // Note: each Tank to Target loop currently includes the Tank Tile. This Tile can be excluded since we will always move the Tank to a known Tile.
+
         foreach (var lidar in Enum.GetValues(typeof(CardinalDirection)).Cast<CardinalDirection>().ToList())
         {
             UpdateMapDirection(lidar);
@@ -398,19 +398,36 @@ public static class Map
     public static void PrintMap2()
     {
         var stringPlot = "";
-        int xMax = map2.Values.ToList().OrderByDescending(t => t.Position.x).FirstOrDefault().Position.x;
-        int yMax = map2.Values.ToList().OrderByDescending(t => t.Position.y).FirstOrDefault().Position.y;
+        int xMax = 0;
+        int xMin = 0;
+        int yMax = 0;
+        int yMin = 0;
 
-        var tiles = map2.Values.OrderByDescending(t => t.Position.y).ToList();
-        foreach (Tile t in map2.Values)
+        foreach (var coordinate in map2.Keys.ToList())
         {
-            //xMax =
-        }
-        int x = 0, y = 0;
-        if (map2.ContainsKey((x, y)))
+            if (coordinate.x < xMin) xMin = coordinate.x;
+            if (coordinate.x > xMax) xMax = coordinate.x;
+            if (coordinate.y < yMin) yMin = coordinate.y;
+            if (coordinate.y > yMax) yMax = coordinate.y;
+        };
+
+
+        for (int y = yMax; y >= yMin; y--)
         {
-            Console.WriteLine($"[{GetBlockTypeShortName( map2[(x, y)].BlockType )}]");
+            for (int x = xMin; x <= xMax; x++)
+            {
+                if (map2.ContainsKey((x, y)))
+                {
+                    Console.Write($"[{GetBlockTypeShortName(map2[(x, y)].BlockType)}]");
+                }
+                else
+                {
+                    Console.Write("[ ]");
+                }
+            }
+            Console.Write(Environment.NewLine);
         }
+        
     }
 
     public static string GetBlockTypeShortName(BlockType type)
@@ -418,16 +435,16 @@ public static class Map
         switch (type)
         {
             case BlockType.Ground:
-                return "[G]";
+                return "G";
             case BlockType.Unidentified:
-                return "[?]";
+                return "?";
             case BlockType.Wall:
-                return "[W]";
+                return "W";
             case BlockType.Hostile:
-                return "[H]";
+                return "H";
             default:
                 Console.WriteLine("GetBlockTypesShortName(): Unhandled BlockType encountered");
-                return "[E]";
+                return "E";
         }
     }
 }
