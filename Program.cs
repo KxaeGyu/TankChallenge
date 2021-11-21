@@ -16,6 +16,16 @@ public class Solution
         Tank.UpdateDistances();
         Map.UpdateMap2();
 
+        Tile hostile = Map.GetClosestHostile();
+
+        if (hostile != null)
+        {
+            // 1. move to line of sight
+            // 2. face hostile
+            // 3. shoot
+            // steps above will not be remembered over simulation steps, so it must check which step is performed
+        }
+
         Tile targetTile = Tank.GetTargetToScan(); // API.IdentifyTarget on best target
 
 
@@ -488,6 +498,11 @@ public static class Map
                 Console.WriteLine("GetBlockTypesShortName(): Unhandled BlockType encountered");
                 return "E";
         }
+    }
+
+    internal static Tile GetClosestHostile()
+    {
+        throw new NotImplementedException();
     }
 }
 
