@@ -4,18 +4,26 @@ using System.Linq;
 
 public class Solution
 {
+    int tic;
     public Solution()
     {
+        tic = 0;
     }
 
     public void Update()
     {
-        Tank.UpdateDistances();
 
-        Map.ResizeMap();
+        Tank.UpdateDistances();
         Map.UpdateMap2();
 
+        Tile targetTile = Tank.GetTargetToScan(); // API.IdentifyTarget on best target
+
+
+
+
+
         Console.WriteLine("Current position is (x,y): (" + Tank.myPos.x + "," + Tank.myPos.y + ")");
+        tic++;
     }
 
 
@@ -97,14 +105,52 @@ public static class Tank
 
         API.MoveBackward();
     }
+
+    public static Tile GetTargetToScan()
+    {
+        // It shall return the best/cheapest target to identify. This tile can be used as an input to the path planner
+        // Estimate outer border Tiles
+        var priorityTargets = new List<Tile>();
+        var targetCost = new Dictionary<Tile, int>();
+
+        foreach (Tile tile in Map.map2.Values)
+        {
+            if (Enumerable.Range(Map.xMin + 1, Map.xMax - 1).Contains(tile.Position.x) && Enumerable.Range(Map.yMin + 1, Map.yMax - 1).Contains(tile.Position.y))
+            {
+                priorityTargets.Add(tile);
+                targetCost.Add(tile, GetLineOfSightCost());
+            }
+        }
+
+        if (priorityTargets.Count > 0)
+        {
+            foreach (Tile tile in priorityTargets)
+            {
+
+            }
+        }
+
+        return new Tile(0, 0); // replace with chosen tile
+    }
+
+    private static int GetLineOfSightCost()
+    {
+        throw new NotImplementedException();
+    }
 }
 public static class Map
 {
+    // Resize map variables
     public static BlockType[,] map = new BlockType[1, 1];
-    public static Dictionary<(int x, int y), Tile> map2 = new Dictionary<(int x, int y), Tile>();
-
     static Vector2 originOffset = new Vector2();
     static Vector2 globalPos;
+
+    // UpdateMap2 variables
+    public static Dictionary<(int x, int y), Tile> map2 = new Dictionary<(int x, int y), Tile>();
+    public static int xMax = 0;
+    public static int xMin = 0;
+    public static int yMax = 0;
+    public static int yMin = 0;
 
     public static void ResizeMap()
     {
@@ -137,7 +183,7 @@ public static class Map
             globalPos.y = (originOffset.y + Tank.myPos.y);
         }
     }
-
+    
     public static Vector2 UpdateMapDirection(CardinalDirection lidarDirection)
     {
         Vector2 target = new Vector2()
@@ -397,11 +443,7 @@ public static class Map
 
     public static void PrintMap2()
     {
-        var stringPlot = "";
-        int xMax = 0;
-        int xMin = 0;
-        int yMax = 0;
-        int yMin = 0;
+        
 
         foreach (var coordinate in map2.Keys.ToList())
         {

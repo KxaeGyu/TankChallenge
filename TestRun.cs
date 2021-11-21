@@ -7,6 +7,7 @@ public class TestRun
 {
     static void Main(string[] args)
     {
+        
         // Step 1
         Console.WriteLine("Step 1");
         LidarSamples.north = 6;
