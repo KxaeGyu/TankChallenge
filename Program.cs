@@ -502,7 +502,8 @@ public static class Map
 
     internal static Tile GetClosestHostile()
     {
-        throw new NotImplementedException();
+        List<Tile> list = map2.Values.Where(t => t.BlockType == BlockType.Hostile).ToList();
+        return list.FirstOrDefault();
     }
 }
 
